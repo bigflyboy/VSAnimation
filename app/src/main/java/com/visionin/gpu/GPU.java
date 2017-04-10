@@ -58,6 +58,10 @@ public class GPU {
         NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "deleteObj", "(I)Z");
 
         NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "addBitmap", "(ILandroid/graphics/Bitmap;)V");
+
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "startARTracking", "()V");
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "stopARTracking", "()V");
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "getTrackStat", "()F");
 	}
 
     /// SurfaceTexture相关
@@ -120,6 +124,12 @@ public class GPU {
     public native boolean deleteObj(int objId);
 
     public native void addBitmap(int mId, Bitmap bitmap);
+
+    public native void startARTracking();
+
+    public native void stopARTracking();
+
+    public native float getTrackStat();
 
     /*****************************动画添加*****************************/
 

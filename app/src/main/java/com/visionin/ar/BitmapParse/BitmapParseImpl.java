@@ -27,6 +27,12 @@ public class BitmapParseImpl implements IBitmapParse {
     InputStream mInputStream;
     String mPath,mPictureName;
 
+    public void setStride(int mStride) {
+        this.mStride = mStride;
+    }
+
+    private int mStride = 1;
+
     public BitmapParseImpl(Context context, AssetManager manager){
         mContext = context;
         mManager = manager;
@@ -86,7 +92,7 @@ public class BitmapParseImpl implements IBitmapParse {
     }
 
     public Bitmap getNextBitmap(){
-        pictureId+=2;
+        pictureId += mStride;
         return getBitmap(pictureId);
     }
 
@@ -102,13 +108,13 @@ public class BitmapParseImpl implements IBitmapParse {
             return null;
         }
         if(id<10){
-            return "animation/" + mPictureName + "/" +mPictureName + "_0000" + id + ".png";
+            return "GMAnimation/" + mPictureName + "/" +mPictureName + "_0000" + id + ".png";
         }else if(id>9&&id<100){
-            return "animation/" + mPictureName + "/" +mPictureName + "_000" + id + ".png";
+            return "GMAnimation/" + mPictureName + "/" +mPictureName + "_000" + id + ".png";
         }else if(id>99&&id<1000){
-            return "animation/" + mPictureName + "/" +mPictureName + "_00" + id + ".png";
+            return "GMAnimation/" + mPictureName + "/" +mPictureName + "_00" + id + ".png";
         }else{
-            return "animation/" + mPictureName + "/" +mPictureName + "_0" + id + ".png";
+            return "GMAnimation/" + mPictureName + "/" +mPictureName + "_0" + id + ".png";
         }
     }
 

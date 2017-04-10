@@ -2,11 +2,13 @@ package com.visionin.core;
 
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.util.Log;
 import android.view.Surface;
 
 import com.visionin.Visionin;
+import com.visionin.ar.BitmapParse.BitmapParseImpl;
 import com.visionin.gpu.GPU;
 
 /**
@@ -14,6 +16,8 @@ import com.visionin.gpu.GPU;
  */
 public class VSVideoFrame extends GPU implements SurfaceTexture.OnFrameAvailableListener {
 //    public static VSVideoFrame  shareInstance;
+
+    private static final String TAG = "VSVideoFrame";
 
     public final static int CAMERA_FACING_BACK = 0;
     public final static int CAMERA_FACING_FRONT = 1;
@@ -43,8 +47,41 @@ public class VSVideoFrame extends GPU implements SurfaceTexture.OnFrameAvailable
 
     private AssetManager assetManager;
 
+    public void setDetectListener(DetectListener detectListener) {
+        mDetectListener = detectListener;
+    }
+
+    private DetectListener mDetectListener;
+
     private boolean isProcessing=false;
     private boolean isProcessingByte=false;
+
+    public void setmBitmapParse(BitmapParseImpl mBitmapParse) {
+        this.mBitmapParse = mBitmapParse;
+    }
+
+    private BitmapParseImpl mBitmapParse;
+    private int mId;
+    private boolean isParse = false;
+    private int mPicNums,isPicNum = 0;
+
+    public void startParse(String name, int picNums, int speed, int options, int stride){
+        mPicNums = picNums;
+        mBitmapParse.setAnimation(name, speed, options);
+        mBitmapParse.setStride(stride);
+        mId = getObjHead();
+        appendObj(picNums, speed, options);
+
+        activeObj(mId);
+        isParse = true;
+    }
+
+    public void stopParse(){
+        isPicNum = 0;
+        BitmapParseImpl.pictureId = -1;
+        deleteObj(mId);
+        stopAnimation();
+    }
 
     public VSVideoFrame(Surface surface) throws Exception {
         super(surface);
@@ -110,6 +147,7 @@ public class VSVideoFrame extends GPU implements SurfaceTexture.OnFrameAvailable
             surfaceTexture=null;
         }
         textureId = createTexture();
+        Log.e(Visionin.TAG, "createTexture()" + textureId);
         surfaceTexture = new SurfaceTexture(textureId);
         surfaceTexture.setOnFrameAvailableListener(this);
         if(oldId>0){
@@ -119,6 +157,7 @@ public class VSVideoFrame extends GPU implements SurfaceTexture.OnFrameAvailable
         return surfaceTexture;
     }
 
+    private int num = 0;
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
 
@@ -139,6 +178,22 @@ public class VSVideoFrame extends GPU implements SurfaceTexture.OnFrameAvailable
             rawBytesCallback.outputBytes(outputBytes);
         }
         isProcessing=false;
+
+        if(getTrackStat() != 0 && mDetectListener != null){
+            mDetectListener.detectChanged(getTrackStat());
+            Log.e("VSVideoFrame", getTrackStat()+"");
+        }
+
+        if(num > 0){
+            if(isParse&&isPicNum<mPicNums){
+                Bitmap bitmap = mBitmapParse.getNextBitmap();
+                addBitmap(mId, bitmap);
+                isPicNum++;
+            }
+        } else{
+            num++;
+        }
+
     }
 
     protected int cameraPosition = CAMERA_FACING_BACK;
@@ -297,12 +352,24 @@ public class VSVideoFrame extends GPU implements SurfaceTexture.OnFrameAvailable
     }
 
     public void destroy(){
+        num = 0;
         makeCurrent();
+        Log.i(TAG, "makeCurrent()");
+        stopParse();
+        Log.i(TAG, "stopParse()");
+        disableObj(mId);
+        Log.i(TAG, "disableObj(mId)");
+        clearObj();
+        Log.i(TAG, "clearObj()");
+        stopAnimation();
+
         destroySurfaceTexture(textureId);
+        Log.i(TAG, "destroySurfaceTexture");
         if(surfaceTexture!=null){
             surfaceTexture=null;
         }
         destroy(mEGLContext);
+        Log.i(TAG, "destroy(mEGLContext);");
     }
 
 
@@ -320,4 +387,8 @@ public class VSVideoFrame extends GPU implements SurfaceTexture.OnFrameAvailable
     public static final String VS_MEDIAN_BLUR_FILTER = "MedianBlur";        // 中值滤波
     public static final String VS_FROSTED_BLUR_FILTER = "FrostedBlur";      // 毛玻璃效果
     public static final String VS_SATURATION_FILTER = "Saturation";         // 饱和度
+
+    public interface DetectListener{
+        public void detectChanged(float statusIndex);
+    }
 }

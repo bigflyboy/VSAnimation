@@ -10,9 +10,11 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.visionin.ar.BitmapParse.BitmapParseImpl;
@@ -59,10 +61,6 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
         setContentView(R.layout.animation);
 
 
-        surfaceView = (SurfaceView) findViewById(R.id.camera_surfaceView);
-        surfaceHolder = surfaceView.getHolder();
-
-
     }
 
 
@@ -70,10 +68,6 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
     protected void onResume() {
         Log.d(TAG, "onResume -- acquiring camera");
         super.onResume();
-        videoSize = openCamera(1920, 1080);
-        surfaceHolder.addCallback(this);
-        Log.d(TAG, "onResume complete: " + this);
-        startShake();
     }
 
     @Override
@@ -145,7 +139,9 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
         Log.d(TAG, "surfaceCreated!");
         this.surfaceHolder = surfaceHolder;
         try {
+            Log.i(TAG, "new VSVideoFrame!");
             videoFrame = new VSVideoFrame(surfaceHolder.getSurface());
+            Log.i(TAG, "new VSVideoFrame!");
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -159,7 +155,7 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
         //videoFrame.setMirrorFrontPreview(true);
         //videoFrame.setMirrorBackPreview(true);
         videoFrame.setVideoSize(videoSize.width, videoSize.height);
-        //设置滤镜，获取美颜数据.
+
         videoFrame.setInputRotation(2);
         videoFrame.setPreviewRotation(3);
         videoFrame.start();
@@ -174,18 +170,31 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
 
 
         videoFrame.startAnimation();
-        mId = videoFrame.getObjHead();
-        videoFrame.appendObj(30, 1, 3);
-
-        videoFrame.activeObj(mId);
-        Log.e("ray","mid = "+mId);
         bitmapParse = new BitmapParseImpl(getApplicationContext(), getAssets());
-        bitmapParse.setAnimation("PuGongYi_Seed_V01", 1, 0);
-        for (int i = 30; i > 0; i--) {
-            Log.e("ray","i = "+i);
-            Bitmap bitmap = bitmapParse.getNextBitmap();
-            videoFrame.addBitmap(mId, bitmap);
-        }
+        videoFrame.setmBitmapParse(bitmapParse);
+        videoFrame.startParse("0.AR_Scanning", 45, 2, 3, 2);
+
+        videoFrame.setDetectListener(new VSVideoFrame.DetectListener() {
+            @Override
+            public void detectChanged(float statusIndex) {
+                changedAnimation("1.AR_Locking", 10, 1, 3);
+            }
+        });
+
+        videoFrame.startARTracking();
+
+//        mId = videoFrame.getObjHead();
+//        videoFrame.appendObj(30, 1, 3);
+//
+//        videoFrame.activeObj(mId);
+//        Log.e("ray","mid = "+mId);
+//
+//        bitmapParse.setAnimation("PuGongYi_Seed_V01", 1, 0);
+//        for (int i = 30; i > 0; i--) {
+//            Log.e("ray","i = "+i);
+//            Bitmap bitmap = bitmapParse.getNextBitmap();
+//            videoFrame.addBitmap(mId, bitmap);
+//        }
 
     }
 
@@ -202,55 +211,26 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
     }
 
     public void startAnimation(View v) {
-        //Log.e(TAG, "startAnimation!");
-//        if (states == 0) {
-//            startShake();
-//            states++;
-//        } else if (states == 1) {
-//            startBlew();
-//            states++;
-//        } else
+
         if (states == 2) {
             startHongBao();
             states++;
         }
-//        } else if (states == 3) {
-//            BitmapParseImpl.pictureId = -1;
-//            videoFrame.deleteObj(mId);
-//            videoFrame.stopAnimation();
-//            isStartAnimation = false;
-//            states++;
-//        }
+
 
     }
 
     private void startShake() {
-        //Toast.makeText(AnimationActivity.this, "开启震动监听事件", Toast.LENGTH_SHORT).show();
+
         mShakeFunc = new ShakeIFunc((SensorManager) getSystemService(SENSOR_SERVICE), (Vibrator) getSystemService(VIBRATOR_SERVICE));
-        //mShakeFunc.setmHandler(mHandler);
+
         mShakeFunc.setCallback(new StatusChangedCallback() {
             @Override
             public void StatusChanged(int status) {
                 //Toast.makeText(AnimationActivity.this, "检测到摇晃，蒲公英长大！关闭监听震动事件！", Toast.LENGTH_SHORT).show();
                 mShakeFunc.stop();
 
-                BitmapParseImpl.pictureId = -1;
-                videoFrame.deleteObj(mId);
-                videoFrame.stopAnimation();
-                //isStartAnimation = false;
-
-                videoFrame.startAnimation();
-                mId = videoFrame.getObjHead();
-                videoFrame.appendObj(30, 1, 3);
-
-                videoFrame.activeObj(mId);
-                bitmapParse = new BitmapParseImpl(getApplicationContext(), getAssets());
-                bitmapParse.setAnimation("GetTheDandelion_P", 1, 2);
-                for (int i = 30; i > 0; i--) {
-                    Bitmap bitmap = bitmapParse.getNextBitmap();
-                    videoFrame.addBitmap(mId, bitmap);
-                }
-                //isStartAnimation = true;
+                changedAnimation("3.GetTheDandelion_O", 34, 1, 2);
                 startBlew();
             }
         });
@@ -265,23 +245,8 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
             @Override
             public void StatusChanged(int status) {
                 mBlewFunc.stop();
-                BitmapParseImpl.pictureId = -1;
-                videoFrame.deleteObj(mId);
-                videoFrame.stopAnimation();
-                //isStartAnimation = false;
 
-                videoFrame.startAnimation();
-                mId = videoFrame.getObjHead();
-                videoFrame.appendObj(30, 1, 2);
-
-                videoFrame.activeObj(mId);
-                bitmapParse = new BitmapParseImpl(getApplicationContext(), getAssets());
-                bitmapParse.setAnimation("BlowTheDandelion_P", 1, 2);
-                for (int i = 30; i > 0; i--) {
-                    Bitmap bitmap = bitmapParse.getNextBitmap();
-                    videoFrame.addBitmap(mId, bitmap);
-                }
-
+                changedAnimation("4.BlowTheDandelion_O", 62, 1, 2);
 
                 //Toast.makeText(AnimationActivity.this, "检测到吹气，蒲公英散开！", Toast.LENGTH_SHORT).show();
 
@@ -292,23 +257,41 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
 
     private void startHongBao() {
 
-        BitmapParseImpl.pictureId = -1;
-        videoFrame.deleteObj(mId);
-        videoFrame.stopAnimation();
-        //isStartAnimation = false;
+        changedAnimation("5.loading", 30, 1, 3);
 
+    }
+
+    private void changedAnimation(String name, int picNums, int speed, int options){
+        videoFrame.stopParse();
         videoFrame.startAnimation();
-        mId = videoFrame.getObjHead();
-        videoFrame.appendObj(23, 1, 3);
-
-        videoFrame.activeObj(mId);
         bitmapParse = new BitmapParseImpl(getApplicationContext(), getAssets());
-        bitmapParse.setAnimation("open", 1, 0);
-        for (int i = 23; i > 0; i--) {
-            Bitmap bitmap = bitmapParse.getNextBitmap();
-            videoFrame.addBitmap(mId, bitmap);
-        }
-        //isStartAnimation = true;
+        videoFrame.setmBitmapParse(bitmapParse);
+        videoFrame.startParse(name, picNums, speed, options, 2);
+    }
 
+    private boolean isOpen = false;
+
+    public void openClose(View v){
+        if(!isOpen){
+            isOpen = true;
+            surfaceView = new SurfaceView(this);
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            surfaceView.setLayoutParams(lp);
+            //surfaceView = (SurfaceView) findViewById(R.id.camera_surfaceView);
+            surfaceHolder = surfaceView.getHolder();
+            videoSize = openCamera(1920, 1080);
+            surfaceHolder.addCallback(this);
+            ((RelativeLayout)findViewById(R.id.relative)).addView(surfaceView);
+            Log.d(TAG, "onResume complete: " + this);
+            startShake();
+
+        } else {
+//            videoFrame.stop();
+//            videoFrame.destroy();
+//            videoFrame = null;
+            isOpen = false;
+            releaseCamera();
+            ((RelativeLayout)findViewById(R.id.relative)).removeView(surfaceView);
+        }
     }
 }
