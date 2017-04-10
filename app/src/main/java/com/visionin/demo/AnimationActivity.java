@@ -19,6 +19,8 @@ import android.widget.Toast;
 
 import com.visionin.ar.BitmapParse.BitmapParseImpl;
 import com.visionin.ar.BlewIFunc;
+import com.visionin.ar.Gyro.VisioninG;
+import com.visionin.ar.Gyro.VisioninGyroListener;
 import com.visionin.ar.ShakeIFunc;
 import com.visionin.ar.StatusChangedCallback;
 import com.visionin.core.VSVideoFrame;
@@ -49,7 +51,7 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
     private ShakeIFunc mShakeFunc;
     private BlewIFunc mBlewFunc;
 
-    private int states = 2;
+    private int states = 0;
 
 
     @Override
@@ -168,20 +170,23 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
             e.printStackTrace();
         }
 
+        videoFrame.startARAnimation(this);
 
-        videoFrame.startAnimation();
-        bitmapParse = new BitmapParseImpl(getApplicationContext(), getAssets());
-        videoFrame.setmBitmapParse(bitmapParse);
-        videoFrame.startParse("0.AR_Scanning", 45, 2, 3, 2);
 
-        videoFrame.setDetectListener(new VSVideoFrame.DetectListener() {
-            @Override
-            public void detectChanged(float statusIndex) {
-                changedAnimation("1.AR_Locking", 10, 1, 3);
-            }
-        });
-
-        videoFrame.startARTracking();
+//        videoFrame.startAnimation();
+//        bitmapParse = new BitmapParseImpl(getApplicationContext(), getAssets());
+//        videoFrame.setmBitmapParse(bitmapParse);
+//        videoFrame.startParse("0.AR_Scanning", 45, 2, 3, 2);
+//
+//        videoFrame.setDetectListener(new VSVideoFrame.DetectListener() {
+//            @Override
+//            public void detectChanged(float statusIndex) {
+//                changedAnimation("1.AR_Locking", 10, 1, 3);
+//                startShake();
+//            }
+//        });
+//
+//        videoFrame.startARTracking();
 
 //        mId = videoFrame.getObjHead();
 //        videoFrame.appendObj(30, 1, 3);
@@ -246,8 +251,8 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
             public void StatusChanged(int status) {
                 mBlewFunc.stop();
 
-                changedAnimation("4.BlowTheDandelion_O", 62, 1, 2);
-
+                changedAnimation("4.BlowTheDandelion_O", 31, 1, 2);
+                states = 2;
                 //Toast.makeText(AnimationActivity.this, "检测到吹气，蒲公英散开！", Toast.LENGTH_SHORT).show();
 
             }
@@ -257,7 +262,7 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
 
     private void startHongBao() {
 
-        changedAnimation("5.loading", 30, 1, 3);
+
 
     }
 
@@ -277,13 +282,23 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
             surfaceView = new SurfaceView(this);
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             surfaceView.setLayoutParams(lp);
+//            surfaceView.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    if(states == 2){
+//                        changedAnimation("5.loading", 15, 1, 3);
+//                        states++;
+//                    }
+//
+//                }
+//            });
             //surfaceView = (SurfaceView) findViewById(R.id.camera_surfaceView);
             surfaceHolder = surfaceView.getHolder();
             videoSize = openCamera(1920, 1080);
             surfaceHolder.addCallback(this);
             ((RelativeLayout)findViewById(R.id.relative)).addView(surfaceView);
             Log.d(TAG, "onResume complete: " + this);
-            startShake();
+
 
         } else {
 //            videoFrame.stop();
@@ -294,4 +309,6 @@ public class AnimationActivity extends Activity implements SurfaceHolder.Callbac
             ((RelativeLayout)findViewById(R.id.relative)).removeView(surfaceView);
         }
     }
+
+
 }

@@ -1,5 +1,6 @@
 package com.visionin.core;
 
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -9,6 +10,8 @@ import android.view.Surface;
 
 import com.visionin.Visionin;
 import com.visionin.ar.BitmapParse.BitmapParseImpl;
+import com.visionin.ar.Gyro.VisioninG;
+import com.visionin.ar.Gyro.VisioninGyroListener;
 import com.visionin.gpu.GPU;
 
 /**
@@ -55,6 +58,12 @@ public class VSVideoFrame extends GPU implements SurfaceTexture.OnFrameAvailable
 
     private boolean isProcessing=false;
     private boolean isProcessingByte=false;
+
+    public void setContext(Context context) {
+        mContext = context;
+    }
+
+    private Context mContext;
 
     public void setmBitmapParse(BitmapParseImpl mBitmapParse) {
         this.mBitmapParse = mBitmapParse;
@@ -179,20 +188,31 @@ public class VSVideoFrame extends GPU implements SurfaceTexture.OnFrameAvailable
         }
         isProcessing=false;
 
-        if(getTrackStat() != 0 && mDetectListener != null){
-            mDetectListener.detectChanged(getTrackStat());
-            Log.e("VSVideoFrame", getTrackStat()+"");
-        }
+//        if(getTrackStat() != 0 && mDetectListener != null){
+//            mDetectListener.detectChanged(getTrackStat());
+//            Log.e("VSVideoFrame", getTrackStat()+"");
+//        }
 
-        if(num > 0){
-            if(isParse&&isPicNum<mPicNums){
-                Bitmap bitmap = mBitmapParse.getNextBitmap();
-                addBitmap(mId, bitmap);
-                isPicNum++;
-            }
-        } else{
-            num++;
+        if(isParse&&isPicNum<15){
+            Bitmap bitmap = mRedParse.getNextBitmap();
+            addBitmap(redObj, bitmap);
+            bitmap = mYellowParse.getNextBitmap();
+            addBitmap(yellowObj, bitmap);
+            bitmap = mOrangeParse.getNextBitmap();
+            addBitmap(OrangeObj, bitmap);
+            Log.e(TAG, "set pugongying success");
+            isPicNum++;
         }
+        draw();
+//        if(num > 0){
+//            if(isParse&&isPicNum<mPicNums){
+//                Bitmap bitmap = mBitmapParse.getNextBitmap();
+//                addBitmap(mId, bitmap);
+//                isPicNum++;
+//            }
+//        } else{
+//            num++;
+//        }
 
     }
 
@@ -354,14 +374,14 @@ public class VSVideoFrame extends GPU implements SurfaceTexture.OnFrameAvailable
     public void destroy(){
         num = 0;
         makeCurrent();
-        Log.i(TAG, "makeCurrent()");
-        stopParse();
-        Log.i(TAG, "stopParse()");
-        disableObj(mId);
-        Log.i(TAG, "disableObj(mId)");
-        clearObj();
-        Log.i(TAG, "clearObj()");
-        stopAnimation();
+//        Log.i(TAG, "makeCurrent()");
+//        stopParse();
+//        Log.i(TAG, "stopParse()");
+//        disableObj(mId);
+//        Log.i(TAG, "disableObj(mId)");
+//        clearObj();
+//        Log.i(TAG, "clearObj()");
+//        stopAnimation();
 
         destroySurfaceTexture(textureId);
         Log.i(TAG, "destroySurfaceTexture");
@@ -390,5 +410,32 @@ public class VSVideoFrame extends GPU implements SurfaceTexture.OnFrameAvailable
 
     public interface DetectListener{
         public void detectChanged(float statusIndex);
+    }
+
+    private int redObj, yellowObj, OrangeObj;
+    private BitmapParseImpl mRedParse,mYellowParse,mOrangeParse;
+    public void startARAnimation(Context context){
+        startAnimation();
+        startARMode();
+        init(3, 6, 2000, 2000, 900, 1600, 90, 90);
+        new VisioninG(context, new VisioninGyroListener() {
+            @Override
+            public void onChange(float x, float y, float z) {
+                setAngle(y, x, z);
+            }
+        });
+        redObj = setRedObj(15, 2, 3);
+        yellowObj = setYellowObj(15, 2, 3);
+        OrangeObj = setOrengeObj(15, 2, 3);
+
+        mRedParse = new BitmapParseImpl(context, context.getAssets());
+        mYellowParse = new BitmapParseImpl(context, context.getAssets());
+        mOrangeParse = new BitmapParseImpl(context, context.getAssets());
+        mRedParse.setAnimation("2.DandelionSeed_P_Type3", 15, 3);
+        mYellowParse.setAnimation("2.DandelionSeed_Y_Type3", 15, 3);
+        mOrangeParse.setAnimation("2.DandelionSeed_O_Type3", 15, 3);
+
+        activeARAnimations();
+        isParse = true;
     }
 }

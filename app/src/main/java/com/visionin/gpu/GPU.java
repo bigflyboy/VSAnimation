@@ -62,6 +62,23 @@ public class GPU {
         NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "startARTracking", "()V");
         NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "stopARTracking", "()V");
         NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "getTrackStat", "()F");
+
+        ////////////////////////////////////AR动画/////////////////////////////////////
+
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "startARMode", "()V");
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "stopARMode", "()V");
+
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "init", "(IIIIIIII)V");
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "setAngle", "(FFF)V");
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "draw", "()V");
+
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "catchObj", "()I");
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "setRedObj", "(III)I");
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "setYellowObj", "(III)I");
+
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "setOrengeObj", "(III)I");
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "activeARAnimations", "()V");
+        NativeLoad.registJNIMethod(so, "com/visionin/gpu/GPU", "disableARAnimations", "()V");
 	}
 
     /// SurfaceTexture相关
@@ -131,7 +148,31 @@ public class GPU {
 
     public native float getTrackStat();
 
-    /*****************************动画添加*****************************/
+    /*****************************AR动画添加*****************************/
+
+    public native void startARMode();
+
+    public native void stopARMode();
+
+    public native void init(int kind, int count, int canvasWidth, int canvasHeight, int screenWidth, int screenHeight, int limitWidthAngle, int limitHeightAngle);
+
+    public native void setAngle(float x, float y, float z);
+
+    public native void draw();
+
+    public native int catchObj();
+
+    public native int setRedObj(int pic_num, int frame_speed, int category);
+
+    public native int setYellowObj(int pic_num, int frame_speed, int category);
+
+    public native int setOrengeObj(int pic_num, int frame_speed, int category);
+
+    public native void activeARAnimations();
+
+    public native void disableARAnimations();
+
+    /*****************************AR动画添加*****************************/
 
     protected long  mEGLContext = 0;
     protected int   mProcessMode = 0;
